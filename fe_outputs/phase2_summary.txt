@@ -1,0 +1,47 @@
+
+================================================================
+  PHASE 2: FEATURE ENGINEERING SUMMARY
+================================================================
+
+  DATASET
+  -------
+  Rows:     6,362,620
+  Features: 41
+  Target:   isFraud (fraud rate = 0.1291%)
+
+  FEATURE GROUPS
+  --------------
+  Basic derived:      4 features  (balance diffs, ratio, zero flag)
+  Balance errors:     4 features  (error_orig/dest, abs versions)
+  Transaction type:   6 features  (5 OHE + high-risk flag)
+  Temporal:           3 features  (hour, day, is_night)
+  Sender-level:       4 features  (count, avg, max, std amount)
+  Receiver-level:     2 features  (count, avg amount)
+  Velocity:           2 features  (txn & amount per sender per step)
+  Interaction:        3 features  (high-amount combos)
+  Log-transformed:    7 features  (log1p of skewed features)
+  Original numeric:   6 features  (step + 5 raw financials)
+
+  DATA QUALITY
+  ------------
+  NaN values:  0
+  Inf values:  0
+  Leakage:     isFlaggedFraud REMOVED
+
+  MEMORY
+  ------
+  Final: 1.1 GB
+
+  OUTPUT FILES
+  ------------
+  - 13_feature_target_correlation.png
+  - 13_top_features_correlation_heatmap.png
+  - 14_feature_importance_rf.png
+  - feature_importance.csv
+  - feature_list.txt
+  - fraud_features.parquet
+  - phase2_summary.txt
+
+================================================================
+  Phase 2 Complete -- Ready for Phase 3: Model Training
+================================================================
