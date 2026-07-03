@@ -1,0 +1,4 @@
+{
+  "model": "LightGBM",
+  "optimal_threshold": 0.1
+}

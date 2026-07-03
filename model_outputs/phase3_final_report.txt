@@ -1,0 +1,127 @@
+
+================================================================
+  PHASE 3: MODELING & EVALUATION — FINAL REPORT
+  FraudSense Fraud Detection System
+================================================================
+
+1. OVERVIEW
+-----------
+  Models tested: LogisticRegression, RandomForest, XGBoost, LightGBM
+  Dataset: ~6.3M rows, 41 features (25% stratified sample used for tuning)
+  Target: isFraud (fraud rate ~0.13%)
+  Evaluation focus: F1-Score (balanced recall + precision), ROC-AUC, PR-AUC
+
+2. CLASS IMBALANCE HANDLING
+---------------------------
+  - Class weighting (balanced / scale_pos_weight) for all models
+  - Random undersampling (3:1 ratio) for LR and RF
+  - XGBoost & LightGBM: native imbalance handling on full training data
+  - NO SMOTE on full dataset (memory-safe)
+
+3. HYPERPARAMETER TUNING
+--------------------------
+  Method: RandomizedSearchCV (12-20 iterations per model)
+  Cross-validation: StratifiedKFold (k=5)
+
+  LogisticRegression:
+    N/A
+
+  RandomForest:
+    {'n_estimators': 100, 'min_samples_split': 10, 'min_samples_leaf': 5, 'max_features': 'log2', 'max_depth': None}
+
+  XGBoost:
+    {'subsample': 0.9, 'reg_lambda': 1.0, 'reg_alpha': 0, 'n_estimators': 400, 'min_child_weight': 5, 'max_depth': 4, 'learning_rate': 0.05, 'gamma': 0.1, 'colsample_bytree': 0.9}
+
+  LightGBM:
+    {'subsample': 0.9, 'reg_lambda': 1.0, 'reg_alpha': 1.0, 'num_leaves': 63, 'n_estimators': 400, 'min_child_samples': 10, 'max_depth': 6, 'learning_rate': 0.01, 'colsample_bytree': 0.7}
+
+4. EVALUATION RESULTS (sorted by F1 for balanced performance)
+--------------------------------------------------------------
+               Model   Recall  Precision       F1  ROC-AUC   PR-AUC  Threshold  Overfit Gap    Time(s)
+            LightGBM 0.995134   0.962353 0.978469 0.999523 0.995221       0.10     0.004866 802.789508
+         RandomForest 0.995134   0.272122 0.427377 0.998383 0.995647       0.15     0.004866   9.711531
+             XGBoost 0.997567   0.243468 0.391408 0.999638 0.997150       0.10     0.001215 200.341530
+  LogisticRegression 0.603406   0.288372 0.390244 0.968805 0.559764       0.90     0.022050   2.387669
+
+5. THRESHOLD OPTIMIZATION
+--------------------------
+  LogisticRegression: threshold=0.90 -> Recall=0.6034, Precision=0.2884
+  RandomForest: threshold=0.15 -> Recall=0.9951, Precision=0.2721
+  XGBoost: threshold=0.10 -> Recall=0.9976, Precision=0.2435
+  LightGBM: threshold=0.10 -> Recall=0.9951, Precision=0.9624
+
+6. CONFUSION MATRIX (LightGBM, threshold=0.10)
+---------------------------------------------------
+  True Positives  (caught fraud):        409
+  False Negatives (MISSED fraud):          2  <-- CRITICAL
+  False Positives (false alarms):         16
+  True Negatives  (correct legit):    317704
+
+  NOTE: LightGBM produces only 16 false alarms vs XGBoost's 1,274,
+  while missing just 1 additional fraud case. This is a dramatically
+  better trade-off for production deployment.
+
+7. FEATURE IMPORTANCE (Top 10 — LightGBM)
+---------------------------------------------
+   1. amount_to_balance_ratio             845
+   2. newbalanceOrig                      443
+   3. abs_error_orig                      399
+   4. step                                380
+   5. balance_diff_dest                   310
+   6. avg_amount_receiver                 300
+   7. is_high_risk_type                   291
+   8. abs_error_dest                      257
+   9. error_orig                          237
+  10. txn_count_receiver                  156
+
+8. OVERFITTING CHECK
+--------------------
+  Train Recall: 1.0000
+  Test Recall:  0.9951
+  Gap:          0.0049
+  Status:       OK (gap < 0.05)
+
+9. FINAL MODEL SELECTION
+-------------------------
+  ** SELECTED: LightGBM **
+  Recall:     0.9951
+  Precision:  0.9624
+  F1-Score:   0.9785
+  ROC-AUC:    0.9995
+  PR-AUC:     0.9952
+  Threshold:  0.10
+
+  Justification:
+  - Best overall balanced performance (F1 = 0.978, far ahead of all others)
+  - Near-perfect recall (99.51%) — misses only 2 frauds out of 411
+  - Exceptional precision (96.24%) — only 16 false alarms vs 1,274 for XGBoost
+  - Stable train-test performance (overfit gap = 0.0049, well within tolerance)
+  - Native class-imbalance handling (is_unbalance=True)
+  - Robust feature utilization — spreads importance across multiple signal types
+    (balance ratios, error signals, transaction type, temporal, entity behavior)
+
+10. SAVED ARTIFACTS
+-------------------
+  - 06_model_comparison.png
+  - 06_roc_pr_curves.png
+  - 07_threshold_optimization.png
+  - 08_confusion_matrices.png
+  - 09_feature_importance.png
+  - 09_shap_beeswarm.png
+  - 09_shap_importance.png
+  - best_hyperparameters.json
+  - best_model.joblib
+  - best_model_feature_importance.csv
+  - confusion_matrices.json
+  - feature_importance_all.csv
+  - final_comparison.csv
+  - model_comparison.csv
+  - model_lightgbm.joblib
+  - model_logisticregression.joblib
+  - model_randomforest.joblib
+  - model_xgboost.joblib
+  - optimal_threshold.json
+
+================================================================
+  Phase 3 Complete — Model ready for deployment
+================================================================
