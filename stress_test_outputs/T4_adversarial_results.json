@@ -1,0 +1,6 @@
+{
+  "adversarial_recall": 0.0,
+  "adversarial_detected": 0,
+  "adversarial_missed": 1010,
+  "total_adversarial": 1010
+}

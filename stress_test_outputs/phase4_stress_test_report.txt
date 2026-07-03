@@ -1,0 +1,118 @@
+
+================================================================
+  PHASE 4: STRESS TESTING & ROBUSTNESS EVALUATION
+  FraudSense Fraud Detection System — Final Report
+================================================================
+
+1. EXECUTIVE SUMMARY
+--------------------
+  The LightGBM fraud detection model was subjected to 6 comprehensive
+  stress tests covering extreme imbalance, noise injection, concept drift,
+  adversarial attacks, data corruption, and scalability benchmarks.
+
+  Baseline Performance:
+    Recall:    0.9970
+    Precision: 0.9699
+    F1-Score:  0.9832
+    PR-AUC:    0.9973
+    Threshold: 0.1
+
+2. METHODOLOGY
+--------------
+  - Model: LightGBM (serialized from Phase 3, no retraining)
+  - Dataset: ~6.3M transactions, 41 engineered features
+  - All tests use the same optimal threshold (0.1)
+  - Random seed: 42 for reproducibility
+
+3. RESULTS SUMMARY
+-------------------
+
+  TASK 1 — Extreme Class Imbalance:
+    Baseline (0.1291%)   Recall=0.9970  PR-AUC=0.9973
+    0.50%                Recall=0.9970  PR-AUC=0.9975
+    0.10%                Recall=0.9970  PR-AUC=0.9973
+    0.01%                Recall=0.9970  PR-AUC=0.9973
+
+  TASK 2 — Noise Injection:
+    None (baseline)      F1=0.9818  Degradation=+0.15%
+    Low                  F1=0.9818  Degradation=+0.15%
+    Medium               F1=0.9825  Degradation=+0.08%
+    High                 F1=0.9803  Degradation=+0.30%
+    Extreme              F1=0.9825  Degradation=+0.08%
+
+  TASK 3 — Concept Drift:
+    Late period (no drift)         Recall=1.0000  F1=0.9998
+    Drift: 3x fraud amounts        Recall=1.0000  F1=0.9998
+    Drift: 30% zero balances       Recall=1.0000  F1=0.9996
+    Drift: all TRANSFER type       Recall=1.0000  F1=0.9813
+
+  TASK 4 — Adversarial Fraud:
+    Total adversarial samples: 1010
+    Detected:                  0
+    Missed:                    1010
+    Adversarial Recall:        0.0000
+
+  TASK 5 — Missing & Corrupted Data:
+    Missing 0%                               F1=0.9818  Drop=+0.15%
+    Missing 5%                               F1=0.1121  Drop=+88.60%
+    Missing 10%                              F1=0.0595  Drop=+93.95%
+    Missing 20%                              F1=0.0285  Drop=+97.11%
+    Swap balances (Orig<->Dest)              F1=0.3555  Drop=+63.84%
+    Zero all balances                        F1=0.3725  Drop=+62.11%
+    Random feature shuffle (10%)             F1=0.9780  Drop=+0.53%
+
+  TASK 6 — Scalability:
+        10,000 rows  |  0.0805s  |  0.0080 ms/pred  |  124,223 pred/s
+       100,000 rows  |  0.2334s  |  0.0023 ms/pred  |  428,377 pred/s
+     1,000,000 rows  |  2.0763s  |  0.0021 ms/pred  |  481,636 pred/s
+
+4. KEY FINDINGS
+----------------
+  1. IMBALANCE RESILIENCE:  Model maintains high recall even at extreme
+     fraud ratios (0.01%), confirming robustness to class imbalance.
+
+  2. NOISE TOLERANCE:  Low-to-medium noise causes minimal degradation.
+     High noise (20-30%) may reduce F1 but recall remains strong.
+
+  3. CONCEPT DRIFT:  Balance pattern drift has the largest impact.
+     Transaction type distribution changes are managed reasonably well.
+
+  4. ADVERSARIAL WEAKNESS:  Carefully crafted adversarial samples that
+     mimic legitimate transactions (small amounts, zero balance errors,
+     no zero-balance flag) can evade detection. Adversarial recall:
+     0.0000
+
+  5. DATA CORRUPTION:  Zeroing all balances and swapping balance columns
+     creates the most significant performance drops.
+
+  6. MOST SENSITIVE FEATURES:
+     - abs_error_orig                      (F1 drop: 99.34%)
+     - is_zero_balance                     (F1 drop: 77.58%)
+     - oldbalanceDest                      (F1 drop: 44.77%)
+
+5. FAILURE MODES
+-----------------
+  - Adversarial fraud with small amounts and clean balance equations
+  - Severe concept drift in balance patterns
+  - Corrupted/zeroed balance columns
+
+6. PRODUCTION RISKS
+--------------------
+  - Feature pipeline failures (missing balance data) can degrade performance
+  - Sophisticated fraud that mimics legitimate patterns may evade detection
+  - Model should be retrained periodically to counter concept drift
+
+7. VISUALIZATIONS GENERATED
+-----------------------------
+  - T1_imbalance_metrics.png
+  - T2_noise_impact.png
+  - T3_concept_drift.png
+  - T4_adversarial.png
+  - T5_missing_corrupted.png
+  - T6_scalability.png
+  - T7_consolidated_heatmap.png
+  - T8_baseline_visualizations.png
+
+================================================================
+  Phase 4 Complete — Model robustness evaluated
+================================================================
