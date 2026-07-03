@@ -1,0 +1,21 @@
+# Dataset and large outputs (too large for git)
+*.csv
+*.zip
+*.parquet
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Console output logs
+eda_outputs/full_console_output.txt
